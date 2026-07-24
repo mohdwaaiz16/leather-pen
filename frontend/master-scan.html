@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Capture Master Standard - Leather Production Intelligence</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .sim-box { border: 2px dashed var(--color-border); padding: 3rem 2rem; text-align: center; border-radius: 12px; margin: 1.5rem 0; background: var(--color-bg); transition: all 0.2s; }
+        .sim-box:hover { border-color: var(--color-primary); background: var(--color-bg-soft); }
+        .status-console { font-family: var(--font-mono); text-align: left; background: #1C211A; color: var(--color-success); padding: 1.5rem; border-radius: 8px; display: none; height: 200px; overflow-y: auto; font-size: 0.875rem; line-height: 1.6;}
+        .stepper { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--color-border); }
+        .step { display: flex; align-items: center; gap: 0.5rem; color: var(--color-text-secondary); font-size: 0.875rem; font-weight: 500; opacity: 0.5; }
+        .step.active { color: var(--color-primary); font-weight: 600; opacity: 1; }
+        .step-circle { width: 24px; height: 24px; border-radius: 50%; background: var(--color-surface-muted); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; }
+        .step.active .step-circle { background: var(--color-primary); color: var(--color-bg); }
+        .step-separator { flex: 1; height: 1px; background: var(--color-border); margin: 0 1rem; }
+    </style>
+</head>
+<body>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/simulator.js"></script>
+    <script>
+        ui.renderShell('Capture Master Standard');
+        simulatorModule.init();
+    </script>
+</body>
+</html>

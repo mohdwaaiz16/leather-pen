@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Settings - Leather Production Intelligence</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        ui.renderShell('Settings');
+        const user = JSON.parse(localStorage.getItem('user'));
+        
+        ui.setContent(`
+            <div class="page-header header-flex">
+                <div>
+                    <h1>Settings</h1>
+                    <div class="subtitle">Manage organization and user preferences.</div>
+                </div>
+            </div>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">User Profile</h3>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" class="form-control" value="${user?.full_name || 'Demo Operator'}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" class="form-control" value="${user?.email || 'operator@demo.com'}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <input type="text" class="form-control" value="${user?.role || 'operator'}" style="text-transform: capitalize;" readonly>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">Organization</h3>
+                    <div class="form-group">
+                        <label>Tannery Name</label>
+                        <input type="text" class="form-control" value="${user?.organizations?.name || 'Demo Tannery'}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Subscription Tier</label>
+                        <input type="text" class="form-control" value="Enterprise (Trial)" readonly>
+                    </div>
+                </div>
+            </div>
+        `);
+    </script>
+</body>
+</html>

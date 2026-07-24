@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Calibration - Leather Production Intelligence</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        ui.renderShell('Device Calibration');
+        ui.setContent(`
+            <div class="page-header header-flex">
+                <div>
+                    <h1>Calibration</h1>
+                    <div class="subtitle">Ensure measurement accuracy using reference tiles.</div>
+                </div>
+            </div>
+            <div class="card" style="text-align:center; padding: 4rem;">
+                <h3 style="margin-bottom: 1rem;">Calibration Routine</h3>
+                <p style="color:var(--color-text-secondary); margin-bottom: 2rem;">Please connect a physical AS7341 device to perform white/black tile calibration.</p>
+                <div style="display:inline-block; padding: 1.5rem; background: var(--color-bg-soft); border-radius: 8px; font-family: var(--font-mono); font-size: 0.875rem;">
+                    NO DEVICE DETECTED ON LOCAL NETWORK
+                </div>
+            </div>
+        `);
+    </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Article Detail - Leather Production Intelligence</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        ui.renderShell('Article Detail');
+        
+        const params = new URLSearchParams(window.location.search);
+        const articleId = params.get('id');
+        
+        async function loadArticle() {
+            try {
+                const article = await window.api.get('/articles/' + articleId);
+                const swatches = await window.api.get('/master-swatches/article/' + articleId);
+                const batches = await window.api.get('/batches');
+                
+                let masterHtml = '';
+                if (swatches && swatches.length > 0) {
+                    const ms = swatches[0];
+                    masterHtml = `
+                        <div style="padding: 1.5rem; background-color: var(--color-success-bg); border-left: 4px solid var(--color-success); border-radius: 4px;">
+                            <h4 style="color: #065f46; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.5rem;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                MASTER CAPTURED
+                            </h4>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; color: #065f46; font-size: 0.875rem; margin-top: 1rem;">
+                                <div><strong>Swatch ID:</strong> <span style="font-family:var(--font-mono)">${ms.swatch_code}</span></div>
+                                <div><strong>Captured:</strong> ${new Date(ms.created_at).toLocaleString()}</div>
+                            </div>
+                            <div style="margin-top: 1.5rem;">
+                                <a href="/master-scan.html?articleId=${article.id}&swatchId=${ms.id}" class="btn btn-primary" style="background-color:#065f46; border:none;">Recapture / View Simulator</a>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    masterHtml = `
+                        <div style="padding: 1.5rem; background-color: var(--color-danger-bg); border-left: 4px solid var(--color-danger); border-radius: 4px;">
+                            <h4 style="color: #b91c1c; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.5rem;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                NO MASTER STANDARD
+                            </h4>
+                            <p style="color: #991b1b; font-size: 0.875rem; margin-bottom: 1.5rem;">No approved reference swatch has been captured. Production quality cannot be verified.</p>
+                            <a href="/master-scan.html?articleId=${article.id}" class="btn btn-primary" style="background-color:#b91c1c; border:none;">Capture Master Standard</a>
+                        </div>
+                    `;
+                }
+                
+                let activeBatchesHtml = '<div class="empty-state" style="padding: 2rem;">No active batches</div>';
+                const articleBatches = batches.filter(b => b.article_id === articleId);
+                if (articleBatches.length > 0) {
+                    activeBatchesHtml = `
+                        <table class="table-clickable">
+                            <thead>
+                                <tr><th>Batch Code</th><th>Stage</th><th>Status</th></tr>
+                            </thead>
+                            <tbody>
+                                ${articleBatches.map(b => `
+                                    <tr onclick="window.location.href='/batches.html'">
+                                        <td style="font-family:var(--font-mono); font-weight:500;">${b.batch_code}</td>
+                                        <td>${b.process_stage || '-'}</td>
+                                        <td><span class="badge badge-neutral">${b.status}</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                ui.setContent(`
+                    <div class="page-header header-flex">
+                        <div>
+                            <div style="font-family:var(--font-mono); color:var(--color-text-secondary); font-size:0.875rem; margin-bottom:0.25rem;">${article.article_code}</div>
+                            <h1 style="margin-bottom:0;">${article.article_name}</h1>
+                            <div class="subtitle" style="margin-top:0.5rem;">${article.leather_type} • ${article.target_color || 'No Target Color'} • ${article.thickness || 'Unknown'} mm</div>
+                        </div>
+                        <div style="display:flex; gap:1rem;">
+                            <button class="btn btn-secondary">Edit Article</button>
+                            <button class="btn btn-primary" onclick="window.location.href='/master-scan.html?articleId=${article.id}'">Scan Master</button>
+                            <button class="btn btn-primary" onclick="window.location.href='/batches.html'">Create Batch</button>
+                        </div>
+                    </div>
+                    
+                    <div class="tabs">
+                        <div class="tab active">Overview</div>
+                        <div class="tab">Master Standard</div>
+                        <div class="tab">Batches</div>
+                        <div class="tab">Scan History</div>
+                        <div class="tab">Recipes</div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                        <div>
+                            <div class="card" style="margin-bottom: 2rem;">
+                                <h3 style="margin-bottom: 1.5rem;">Master Standard</h3>
+                                ${masterHtml}
+                            </div>
+                            
+                            <div class="card">
+                                <h3 style="margin-bottom: 1.5rem;">Current Production</h3>
+                                ${activeBatchesHtml}
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div class="card">
+                                <h3 style="margin-bottom: 1rem;">Article Information</h3>
+                                <div style="display:flex; flex-direction:column; gap:1rem; font-size:0.875rem;">
+                                    <div><div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Customer</div><div style="font-weight:500;">${article.customer_name || '—'}</div></div>
+                                    <div><div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Leather Type</div><div style="font-weight:500;">${article.leather_type}</div></div>
+                                    <div><div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Thickness</div><div style="font-weight:500;">${article.thickness || '—'} mm</div></div>
+                                    <div><div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Target Color</div><div style="font-weight:500;">${article.target_color || '—'}</div></div>
+                                    <div><div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Color Ref</div><div style="font-weight:500;">${article.color_reference || '—'}</div></div>
+                                    <div style="padding-top:1rem; border-top:1px solid var(--color-border);">
+                                        <div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Last Updated</div>
+                                        <div>${new Date(article.updated_at).toLocaleDateString()}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <h3 style="margin-bottom: 1rem;">Quality Trend</h3>
+                                <div class="empty-state" style="padding: 2rem;">Not calculated</div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            } catch (e) {
+                ui.setContent('<div class="empty-state" style="color:var(--color-danger)">Failed to load article</div>');
+            }
+        }
+        
+        if (articleId) loadArticle();
+        else ui.setContent('<div class="empty-state">No article specified</div>');
+    </script>
+</body>
+</html>

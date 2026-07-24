@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Scan Detail - Leather Production Intelligence</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        ui.renderShell('Scan Detail');
+        const params = new URLSearchParams(window.location.search);
+        const scanId = params.get('id');
+        
+        async function loadScan() {
+            try {
+                const scans = await window.api.get('/scans');
+                const scan = scans.find(s => s.id === scanId);
+                
+                if (!scan) {
+                    ui.setContent('<div class="empty-state">Scan not found.</div>');
+                    return;
+                }
+                
+                let tbody = '';
+                const labels = [];
+                const data = [];
+                for (const [key, val] of Object.entries(scan.spectral_data || {})) {
+                    tbody += `<tr><td style="padding:0.5rem 0; color:var(--color-text-secondary); text-transform:uppercase; border-bottom:1px solid var(--color-border);">${key}</td><td style="padding:0.5rem 0; text-align:right; border-bottom:1px solid var(--color-border); font-family:var(--font-mono);">${val}</td></tr>`;
+                    if(key !== 'clear' && key !== 'nir') {
+                        labels.push(key.toUpperCase());
+                        data.push(val);
+                    }
+                }
+
+                ui.setContent(`
+                    <div class="page-header header-flex">
+                        <div>
+                            <div style="font-family:var(--font-mono); color:var(--color-text-secondary); font-size:0.875rem; margin-bottom:0.25rem;">SCAN</div>
+                            <h1 style="margin-bottom:0; font-family:var(--font-mono); font-size:1.5rem;">${scan.id}</h1>
+                            <div class="subtitle" style="margin-top:0.5rem;">Captured: ${new Date(scan.captured_at).toLocaleString()}</div>
+                        </div>
+                        <div style="display:flex; gap:1rem;">
+                            <span class="badge ${scan.scan_type === 'MASTER' ? 'badge-info' : 'badge-neutral'}" style="font-size:1rem; padding: 0.5rem 1rem;">${scan.scan_type}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                        <div>
+                            <div class="card" style="margin-bottom: 2rem;">
+                                <h3 style="margin-bottom: 1.5rem;">Spectral Signature</h3>
+                                <div style="height: 300px;">
+                                    <canvas id="spectralChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="card" style="margin-bottom: 2rem;">
+                                <h3 style="margin-bottom: 1rem;">Raw Channels</h3>
+                                <table style="width:100%; font-size:0.875rem; border-collapse:collapse;">
+                                    <tbody>${tbody}</tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="card">
+                                <h3 style="margin-bottom: 1rem;">Scan Metadata</h3>
+                                <div style="display:flex; flex-direction:column; gap:1rem; font-size:0.875rem;">
+                                    <div><div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Device</div><div style="font-family:var(--font-mono);">${scan.device_id}</div></div>
+                                    <div><div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Firmware</div><div style="font-family:var(--font-mono);">${scan.firmware_version || 'Unknown'}</div></div>
+                                    <div><div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Sensor Temp</div><div>${scan.sensor_temperature || '—'} °C</div></div>
+                                    <div><div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Article</div><div><a href="/article-detail.html?id=${scan.article_id}" style="font-weight:500;">${scan.articles?.article_name || scan.article_id.substring(0,8)}</a></div></div>
+                                    ${scan.batch_id ? `<div><div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Batch</div><div><a href="/batch-detail.html?id=${scan.batch_id}" style="font-weight:500;">${scan.batch_id.substring(0,8)}</a></div></div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                
+                const ctx = document.getElementById('spectralChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Spectral Reflectance',
+                            data: data,
+                            borderColor: '#2B3527',
+                            backgroundColor: 'rgba(43, 53, 39, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#10b981',
+                            pointBorderColor: '#fff',
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: '#E2E6DF' } },
+                            x: { grid: { display: false } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+
+            } catch (e) {
+                ui.setContent('<div class="empty-state" style="color:var(--color-danger)">Error loading scan</div>');
+            }
+        }
+        
+        if (scanId) loadScan();
+        else ui.setContent('<div class="empty-state">No scan ID provided</div>');
+    </script>
+</body>
+</html>

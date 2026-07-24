@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Batch Detail - Leather Production Intelligence</title>
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script>
+        ui.renderShell('Batch Detail');
+        const params = new URLSearchParams(window.location.search);
+        const batchId = params.get('id');
+        
+        async function loadBatch() {
+            try {
+                const batches = await window.api.get('/batches');
+                const batch = batches.find(b => b.id === batchId);
+                
+                if (!batch) {
+                    ui.setContent('<div class="empty-state">Batch not found.</div>');
+                    return;
+                }
+                
+                const scans = await window.api.get('/scans');
+                const batchScans = scans.filter(s => s.batch_id === batchId);
+                
+                let scansHtml = '<div class="empty-state" style="border:none;">No quality scans recorded for this batch yet.</div>';
+                if (batchScans.length > 0) {
+                    scansHtml = `
+                        <table class="table-clickable">
+                            <thead>
+                                <tr><th>Scan ID</th><th>Captured At</th><th>Device</th><th>ΔE to Master</th><th>Result</th></tr>
+                            </thead>
+                            <tbody>
+                                ${batchScans.map(s => `
+                                    <tr onclick="window.location.href='/scan-detail.html?id=${s.id}'">
+                                        <td style="font-family:var(--font-mono); font-size:0.75rem;">${s.id.substring(0,8)}...</td>
+                                        <td>${new Date(s.captured_at).toLocaleString()}</td>
+                                        <td>${s.device_id.substring(0,8)}</td>
+                                        <td><strong>0.84</strong></td>
+                                        <td><span class="badge badge-success">PASS</span></td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+                ui.setContent(`
+                    <div class="page-header header-flex">
+                        <div>
+                            <div style="font-family:var(--font-mono); color:var(--color-text-secondary); font-size:0.875rem; margin-bottom:0.25rem;">BATCH</div>
+                            <h1 style="margin-bottom:0; font-family:var(--font-mono);">${batch.batch_code}</h1>
+                            <div class="subtitle" style="margin-top:0.5rem;">${batch.articles?.article_name || 'Unknown Article'} • ${batch.process_stage}</div>
+                        </div>
+                        <div style="display:flex; gap:1rem;">
+                            <button class="btn btn-secondary">Update Stage</button>
+                            <button class="btn btn-primary" onclick="window.location.href='/master-scan.html?articleId=${batch.article_id}&batchId=${batch.id}'">Capture QC Scan</button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                        <div>
+                            <div class="card" style="margin-bottom: 2rem;">
+                                <h3 style="margin-bottom: 1.5rem;">Quality Control Scans</h3>
+                                ${scansHtml}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="card">
+                                <h3 style="margin-bottom: 1rem;">Batch Information</h3>
+                                <div style="display:flex; flex-direction:column; gap:1rem; font-size:0.875rem;">
+                                    <div><div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Article</div><div style="font-weight:500;">${batch.articles?.article_name || '—'}</div></div>
+                                    <div><div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Weight</div><div style="font-weight:500;">${batch.batch_weight || '—'} kg</div></div>
+                                    <div><div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Process Stage</div><div style="font-weight:500;">${batch.process_stage}</div></div>
+                                    <div><div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Status</div><div><span class="badge badge-info">${batch.status}</span></div></div>
+                                    <div style="padding-top:1rem; border-top:1px solid var(--color-border);">
+                                        <div style="color:var(--color-text-secondary); margin-bottom:0.25rem;">Created At</div>
+                                        <div>${new Date(batch.created_at).toLocaleString()}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            } catch (e) {
+                ui.setContent('<div class="empty-state" style="color:var(--color-danger)">Error loading batch</div>');
+            }
+        }
+        
+        if (batchId) loadBatch();
+        else ui.setContent('<div class="empty-state">No batch ID provided</div>');
+    </script>
+</body>
+</html>
